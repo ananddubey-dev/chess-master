@@ -78,7 +78,9 @@ export const tournaments = pgTable(
       .notNull()
       .defaultNow(),
   },
-  (table) => [index('tournaments_status_start_idx').on(table.status, table.startsAt)],
+  (table) => [
+    index('tournaments_status_start_idx').on(table.status, table.startsAt),
+  ],
 );
 
 export const participants = pgTable(
@@ -184,6 +186,9 @@ export const queueEntries = pgTable(
     ),
     uniqueIndex('queue_waiting_user_unique')
       .on(table.tournamentId, table.userId)
+      .where(sql`${table.status} = 'WAITING'`),
+    uniqueIndex('queue_waiting_user_global_unique')
+      .on(table.userId)
       .where(sql`${table.status} = 'WAITING'`),
   ],
 );

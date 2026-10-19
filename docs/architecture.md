@@ -46,19 +46,12 @@ kingdom-chess/
 ├── apps/
 │   ├── api/                         # NestJS 11 REST + Socket.IO
 │   │   └── src/
-│   │       ├── auth/
-│   │       ├── users/
-│   │       ├── tournaments/
-│   │       ├── matchmaking/
-│   │       ├── matches/
-│   │       ├── leaderboard/
+│   │       ├── features/            # Auth, tournament, match services/controllers, gateway
 │   │       └── db/                  # Drizzle schema and database provider
 │   └── web/                         # Next.js App Router + React 19
 │       └── src/
-│           ├── app/                 # App Router routes/layouts
-│           ├── components/          # shadcn/ui and app components
-│           ├── features/
-│           └── lib/                 # API, QueryClient, and socket helpers
+│           ├── app/                 # Login, workspace, and live-match routes
+│           └── lib/                 # Cookie-enabled REST client
 ├── apps/api/drizzle/                # Generated SQL migrations and metadata
 ├── docs/
 │   ├── prd.md
@@ -76,14 +69,13 @@ kingdom-chess/
 Keep one Drizzle schema/migration location under `apps/api`; do not create duplicate schemas. The repository currently stores its documentation in `docs/`, which is preserved.
 
 ## 4. Backend Modules
-- **AuthModule:** email/password login, password hashing, JWT `httpOnly` cookie, logout, `GET /api/v1/me`, authentication guard.
-- **UsersModule:** role-aware user profile lookup.
-- **TournamentsModule:** coach CRUD, lifecycle validation, student browse/join, participants.
-- **MatchmakingModule:** FIFO queue operations and concurrency-safe pairing.
-- **MatchesModule:** snapshots, server-authoritative `chess.js` validation, clocks, resignation, termination, and PGN persistence.
-- **LeaderboardModule:** points, deterministic ranking, match history, and tournament winner.
+- **Authentication:** `AuthService`, controllers, and guards provide email/password login, bcrypt hashing, JWT `httpOnly` cookie, logout, `/auth/me` and `/me`, plus role-based access.
+- **Tournament and results:** `TournamentService` provides coach CRUD/lifecycle rules, student browse/join, membership, match history, standings, and winner selection.
+- **Matchmaking and games:** PostgreSQL queue transactions pair FIFO entries; the Socket.IO gateway authenticates cookie sessions, validates events, authorizes rooms, broadcasts participant-specific snapshots, and runs the timeout sweep.
+- **Chess and scoring:** `chess.js` validates server-side moves and PGN; match state is persisted, and result/points updates are transactional and idempotent.
 - **DatabaseModule:** PostgreSQL connection and Drizzle schema/query provider.
-- **GameGateway:** authenticated Socket.IO events, payload validation, and participant-only rooms.
+
+These responsibilities currently live in `apps/api/src/features/`; the names above describe boundaries rather than separate Nest modules.
 
 Keep controllers and gateways thin. Place business rules in services. Use DTOs for REST and validate socket payloads at the event boundary. Use database transactions for state changes spanning matches and participant scores.
 
@@ -98,6 +90,8 @@ The initial relational model should cover:
 Use Drizzle schema definitions and Drizzle Kit to generate versioned SQL migrations. Commit migration SQL and metadata. Apply migrations using the project's documented Drizzle Kit command only after the schema and environment are configured. Do not use Prisma schema/client/migration files or commands for the required implementation. If a legacy Prisma artifact is discovered later, inspect it and preserve it until any required data migration and replacement have been reviewed and verified.
 
 Use PostgreSQL constraints for uniqueness and foreign keys. Represent time and score consistently. A fresh local seed should be deterministic and safe to rerun, with one coach and at least four students.
+
+The seed upserts one local coach and four students by email. Pairing and result finalization use PostgreSQL transactions/row locks; migrations still need to be generated and applied in the target environment.
 
 ## 6. Chess State and Clock
 - The API uses `chess.js`; do not hand-roll chess rules.

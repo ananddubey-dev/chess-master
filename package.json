@@ -16,6 +16,7 @@
     "db:down": "docker compose down",
     "db:logs": "docker compose logs -f db",
     "db:generate": "npm run db:generate --workspace @kingdom-chess/api",
-    "db:migrate": "npm run db:migrate --workspace @kingdom-chess/api"
+    "db:migrate": "npm run db:migrate --workspace @kingdom-chess/api",
+    "db:seed": "npm run db:seed --workspace @kingdom-chess/api"
   }
 }

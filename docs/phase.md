@@ -1,152 +1,112 @@
-# Implementation Phases
-## Required-Stack Plan and Verification Checklist
+# Implementation Plan and Submission Gates
 
-**Deadline:** Before 18 October 2026  
-**Strategy:** The required-stack scaffold is already present. Verify and finish its foundation, then deliver the smallest complete end-to-end tournament flow. Do not spend time on optional polish before core acceptance criteria work.
+**Updated:** 19 October 2026  
+**Goal:** Deliver the required-stack tournament journey from coach setup through student matchmaking, live chess, persisted results, and standings.
 
 ## Status Legend
-- `[ ]` Not started / not verified
-- `[~]` Partially present or in progress; not yet verified as working
-- `[x]` Verified by inspecting the repository or running the stated check
-- `[!]` Blocked; reason must be stated
 
-Only mark implementation/runtime tasks complete after actual repository evidence and the corresponding command/test prove them.
+- `[ ]` Not implemented or not yet verified.
+- `[~]` Implemented in source but not verified at runtime.
+- `[x]` Verified by an actual command or end-to-end observation.
+- `[!]` Blocked with a documented reason.
 
-## Repository Baseline — 17 October 2026
-Verified by file inspection and commands:
-- [x] Inspected root/app manifests, Docker Compose, environment sample, and project Markdown files.
-- [x] Git repository is on `master` with no commits; `git status --short --branch` shows project files as untracked.
-- [x] Next.js App Router + React 19 scaffold is present in `apps/web/`; no Vite config was found.
-- [x] NestJS 11 scaffold, strict TypeScript config, Drizzle schema/configuration, and PostgreSQL provider are present in `apps/api/`; no Prisma files were found.
-- [x] `npm ls --depth=0 --workspaces` completed with exit code 0; workspace dependencies resolve.
-- [x] `docker compose config --quiet` completed with exit code 0.
-- [ ] No root `package-lock.json` exists yet.
-- [ ] Docker Engine was unreachable during `docker compose ps`; database container health is not verified.
-- [ ] Drizzle SQL migrations have not been generated or applied.
-- [ ] App builds, API health request, and feature tests have not been run/verified.
-- [ ] shadcn/ui configuration/components have not been initialized.
-- [x] No assignment PDF was found in the repository.
+Source presence is not evidence that a behavior works. Tests are explicitly deferred until the user authorizes them.
 
-## Phase 0 — Required-Stack Foundation and Verification
-**Priority:** P0
+## Initial Scaffold Audit
 
-### 0A. Required-stack scaffolds
-- [x] Inspect the existing app contents, manifests, and scripts before planning further setup.
-- [x] `apps/web` has a Next.js App Router + React 19 scaffold, strict TypeScript configuration, and Tailwind CSS.
-- [x] `apps/api` has a NestJS 11 scaffold and strict TypeScript configuration.
-- [ ] Initialize shadcn/ui and verify its component configuration.
-- [x] Declare TanStack React Query, Socket.IO Client, `chess.js`, and `react-chessboard`; the web app has a QueryClient provider.
-- [x] Add Drizzle ORM schema, Drizzle Kit configuration, and PostgreSQL pool/database service; verify SQL generation and migration below.
-- [x] Set TypeScript strict mode for both apps.
-- [x] Align workspace scripts and sample environment names with Next.js (`NEXT_PUBLIC_API_URL`) and Drizzle.
-- [x] No Vite configuration or Prisma schema/directory was found; a legacy-stack migration is not currently needed.
+Before this implementation pass, the repo contained the NestJS/Next.js scaffolds, PostgreSQL/Drizzle schema and provider, health route, and placeholder landing page. Authentication, tournament behavior, matchmaking, gameplay, results, and leaderboard were absent. That baseline was about a starter scaffold, not a functioning MVP.
 
-### 0B. Verify foundation
-- [x] Docker Compose configuration parses.
-- [x] `npm ls --depth=0 --workspaces` resolves declared dependencies (exit 0).
-- [ ] Create and commit the root npm lockfile with the selected workspace dependencies.
-- [ ] Docker Engine starts PostgreSQL and `docker compose ps` confirms it is healthy.
-- [ ] Drizzle schema/migrations generate and apply successfully to PostgreSQL.
-- [ ] NestJS starts; `GET /api/v1/health` returns a successful database check.
-- [ ] Next.js starts and builds; verify the frontend can call the API from the configured origin.
-- [ ] Verify credentialed CORS, DTO validation, and required environment validation at runtime.
-- [ ] Confirm `.env` is ignored and no secrets are tracked.
+Current workspace: `C:\Users\ADMIN\Desktop\chess`. A direct check found application dependencies missing from expected `node_modules` locations. Docker health, builds, API health, migrations, tests, and browser flow have not been verified in this pass.
 
-**Acceptance criteria:** Next.js and NestJS start from documented commands; PostgreSQL accepts a reviewed Drizzle migration; the API health route and browser frontend respond; strict TypeScript builds pass.
+## Phase 0 — Reproducible Foundation
+
+- [~] NestJS 11, strict TypeScript, PostgreSQL/Drizzle provider, Next.js App Router/React 19, Tailwind, and QueryClient foundation are present.
+- [~] `.env.example`, Compose PostgreSQL service, API/web scripts, and DB scripts are present.
+- [ ] Restore dependencies and create the root npm lockfile.
+- [ ] Generate and review the Drizzle SQL migration.
+- [ ] Start PostgreSQL, apply migration, and confirm healthy status.
+- [ ] Build and lint both apps; confirm strict TypeScript.
+- [ ] Verify API health, CORS, environment validation, and frontend API connectivity.
+- [~] Initialize shadcn/ui configuration and a reusable accessible button primitive; additional primitives are unnecessary for the current forms and tables.
 
 ## Phase 1 — Authentication and Seed
-**Priority:** P0
-- [ ] Validate required environment variables on startup.
-- [ ] Implement password hashing, email/password login, JWT `httpOnly` cookie, logout, and `GET /api/v1/me`.
-- [ ] Add authentication guard and Coach/Student role guard/decorator.
-- [ ] Enforce roles on backend REST actions and authenticate Socket.IO handshakes.
-- [ ] Add deterministic Drizzle seed: one coach and at least four students; document local-only credentials.
-- [ ] Test valid/invalid login, missing authentication, and forbidden roles.
 
-**Acceptance criteria:** Seeded accounts authenticate; password hashes and JWTs are not returned in normal response bodies; protected REST/socket access rejects unauthenticated or wrong-role users.
+- [~] Validate required environment values at API startup.
+- [~] Email/password login with bcrypt, httpOnly JWT cookie, logout, and `/auth/me` plus `/me`.
+- [~] Protect API routes and enforce coach/student permissions.
+- [~] Authenticate Socket.IO from the session cookie and resolve the account from the database.
+- [~] Add repeatable seed for one coach and four students; local credentials are in root `README.md`.
+- [ ] Once authorized, test valid/invalid login, unauthenticated requests, and role denials.
 
 ## Phase 2 — Tournament Management
-**Priority:** P0
-- [ ] Add validated tournament create/list/retrieve/update/delete DTOs and endpoints.
-- [ ] Enforce coach management permissions and safe lifecycle transitions.
-- [ ] Allow students to browse eligible tournaments and join open tournaments.
-- [ ] Prevent duplicate membership and joins to ineligible tournaments through service rules and database constraints.
-- [ ] Return participants, matches, results, and standings as required.
-- [ ] Test join eligibility, duplicate joins, lifecycle rules, and authorization.
 
-**Acceptance criteria:** A coach can create/open a tournament; an eligible student joins exactly once; invalid roles/statuses are rejected by the API.
+- [~] Coach create/list/read/update/delete with status lifecycle rules.
+- [~] Student browse and join open tournaments; membership is unique and eligibility is checked transactionally.
+- [~] Protect tournament management by coach ownership; only safe draft tournaments can be deleted.
+- [~] Return standings, match results, and tournament winner data.
+- [ ] Once authorized, test lifecycle, duplicate join, owner permissions, and delete safety.
 
-## Phase 3 — Automatic Matchmaking
-**Priority:** P0
-- [ ] Implement tournament-specific queue entry and cancellation if supported.
-- [ ] Atomically pair two distinct eligible waiting students; prevent duplicate active matches.
-- [ ] Create assigned colors and authoritative initial clock/game state.
-- [ ] Notify both players through authenticated Socket.IO events without requiring refresh.
-- [ ] Document queue durability/scaling limitations.
-- [ ] Test concurrent queue requests and two independent student sessions.
+## Phase 3 — Matchmaking
 
-**Acceptance criteria:** Two eligible queued students receive one persisted match, no student is paired twice concurrently, and both clients receive the same match assignment.
+- [~] Persist tournament FIFO queue entries and support queue cancellation.
+- [~] Pair eligible players transactionally with row locks and a global waiting-entry uniqueness constraint.
+- [~] Reject users already playing or queued in another tournament.
+- [~] Assign colors and initialize persisted match clocks/state.
+- [~] Notify both players through authenticated Socket.IO events and route them to the match.
+- [~] Document one-process queue limitations.
+- [ ] Once authorized, test concurrent queueing and paired student sessions.
 
-## Phase 4 — Server-Authoritative Live Chess
-**Priority:** P0
-- [ ] Authorize participants before joining private match rooms.
-- [ ] Use `chess.js` on the server to validate match status, identity/color, turn, freshness, and legal moves.
-- [ ] Persist enough state to restore the board, move history/PGN, and clocks.
-- [ ] Broadcast accepted moves and authoritative snapshots to both participants.
-- [ ] Calculate shared clocks from server timestamps and persisted remaining time.
-- [ ] Handle checkmate, resignation, timeout, stalemate, and draw.
-- [ ] Serialize move/timeout/result races; finalize exactly once with a database transaction.
-- [ ] Test legal/illegal moves, turn validation, color authorization, timeout, and duplicate finalization.
+## Phase 4 — Live Chess
 
-**Acceptance criteria:** Two clients observe the same legal server state; invalid/out-of-turn moves are rejected; termination and score updates are persisted once.
+- [~] Authenticate match sockets and authorize participant-only room joins.
+- [~] Validate moves on the server with `chess.js` and enforce participant, color, turn, status, and legal-move rules.
+- [~] Persist FEN, PGN, clocks, last move time, and result.
+- [~] Broadcast participant-specific authoritative snapshots, including after reconnect.
+- [~] Calculate clocks from server timestamps; timeout sweep runs every three seconds.
+- [~] Handle checkmate, resignation, timeout, stalemate, and chess.js draw conditions.
+- [~] Lock move/finalization transactions and award points idempotently.
+- [ ] Once authorized, test legal/illegal/out-of-turn moves, timeout, reconnect, and duplicate finalization.
 
 ## Phase 5 — Results and Leaderboard
-**Priority:** P0
-- [ ] Implement win = 1, draw = 0.5, loss = 0.
-- [ ] Update player points only once per completed match.
-- [ ] Rank by points, then a documented deterministic secondary tiebreak/stable shared rank.
-- [ ] Show match history, results, standings, and a winner only for a completed tournament.
-- [ ] Test result scoring, ranking, tie behavior, and duplicate result prevention.
 
-**Acceptance criteria:** Persisted standings equal scores from completed matches and are deterministically ordered.
+- [~] Score win = 1, draw = 0.5, loss = 0 in the result transaction.
+- [~] Rank by points, share ranks on ties, then sort names consistently.
+- [~] Show match history, tournament standings, and a winner only after completion.
+- [ ] Once authorized, test scoring, tie ordering, and result idempotency.
 
-## Phase 6 — Next.js User Experience
-**Priority:** P0
-- [ ] Build Login and role-aware application shell with Next.js App Router, React 19, Tailwind CSS, and shadcn/ui.
-- [ ] Implement coach tournament dashboard and create/edit/details/results screens.
-- [ ] Implement student tournament browse/join, schedule/history, matchmaking wait, and leaderboard screens.
-- [ ] Implement live board, player clocks, turn indicator, connection status, move list/PGN, and resignation/result views.
-- [ ] Use TanStack React Query for REST data and invalidate affected queries after mutations.
-- [ ] Use Socket.IO Client for queue/match events; reconcile with authoritative API/socket snapshots.
-- [ ] Include accessible forms plus loading, error, empty, pending, and success states.
-- [ ] Verify responsive layout and a two-student browser flow.
+## Phase 6 — Web Experience
 
-**Acceptance criteria:** The documented student/coach journey works in the browser without direct database manipulation or fake live data.
+- [~] Login and role-aware dashboard.
+- [~] Coach create/edit/status/delete actions, student browse/join/queue, standings, match history, and visible error/loading/empty states.
+- [~] Live board with clocks, turns, PGN, drag and manual move input, resignation, connection status, and result.
+- [~] TanStack React Query handles REST server data and cache invalidation; Socket.IO handles live events.
+- [~] Responsive styles and keyboard-visible focus states are implemented in source.
+- [~] Configure shadcn/ui conventions and use the shared Button primitive on the login flow.
+- [ ] Build and inspect the app at desktop/mobile breakpoints.
+- [ ] Once authorized, run the two-browser coach/two-student flow.
 
-## Phase 7 — Tests, README, Submission
-**Priority:** P0
-- [ ] Test scoring, leaderboard ranking, join rules, chess legality, turn validation, authorization, and idempotent finalization.
-- [ ] Run backend tests/build and frontend build/type checks.
-- [ ] Verify Drizzle migrations and seed from a clean local database.
-- [ ] Document Windows prerequisites, Docker, environment variables, migrations, seed credentials, and app startup.
-- [ ] Document REST conventions, socket event names/directions/payloads, design choices, and honest limitations.
-- [ ] Confirm `.env.example` contains placeholders and no secrets are tracked.
-- [ ] Manually play a match using two separate browser profiles.
+## Phase 7 — Submission Verification
 
-**Acceptance criteria:** Critical automated checks pass and a clean local setup can be followed from the README; report any unverified criterion honestly.
+- [x] Update root and app READMEs with setup, accounts, REST routes, Socket.IO events, a two-browser walkthrough, decisions, and limitations.
+- [ ] Restore dependencies and create lockfile.
+- [ ] Generate/review/apply migration; run seed.
+- [ ] Build and lint API and web (not tests).
+- [ ] Start the stack and verify health/login from the browser.
+- [ ] Run automated tests only after the user explicitly asks.
 
-## Stretch Goals — Only After P0
-- [ ] Reconnect and restore authoritative board and clock.
-- [ ] Coach spectator mode.
-- [ ] Draw offers, threefold repetition, 50-move rule UI, or increment-clock refinements.
-- [ ] Advanced matchmaking, full round-robin completion, or analytics.
+## Known MVP Limitations
 
-## Final Submission Gate
-Do not spend remaining time on polish while any of these are broken:
-1. Authentication and backend role checks.
-2. Tournament join eligibility.
-3. Automatic pairing.
-4. Legal synchronized chess moves.
-5. Shared clock and game termination.
-6. Persisted result and leaderboard scoring.
-7. Verified tests and reproducible setup documentation.
+- Queue and timeout sweep are designed for one API process; no Redis or multi-instance coordination.
+- Timeout sweep interval is three seconds.
+- Pawn promotion auto-selects queen.
+- No draw-offer UI or spectator mode.
+- Ties use shared rank and alphabetical display order, not head-to-head tiebreaks.
+- Runtime behavior remains unverified until the gates above are completed.
+
+## Next Actions
+
+1. Restore dependencies and generate `package-lock.json`.
+2. Generate and review Drizzle migration SQL.
+3. Build/lint API and web without running tests.
+4. Start PostgreSQL, apply migrations, seed, and verify API/web startup and health.
+5. Stop before test execution; wait for the user to authorize tests.
