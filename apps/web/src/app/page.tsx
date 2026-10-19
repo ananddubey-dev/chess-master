@@ -272,10 +272,16 @@ export default function Home() {
       return (
         <main className="loading-screen">
           <div className="error-panel">
-            <h1>We couldn’t load your account</h1>
-            <p>{me.error.message}</p>
+            <h1>Can’t reach the account service</h1>
+            <p>
+              Check that the API is running, then try again. You can also open
+              the sign-in page.
+            </p>
+            <Link className="button button-primary" href="/login">
+              Sign in
+            </Link>
             <button
-              className="button button-primary"
+              className="button button-secondary"
               onClick={() => void me.refetch()}
             >
               Try again
