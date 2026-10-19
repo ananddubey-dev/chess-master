@@ -1,0 +1,21 @@
+{
+  "name": "kingdom-chess",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "apps/api",
+    "apps/web"
+  ],
+  "scripts": {
+    "dev:api": "npm run start:dev --workspace @kingdom-chess/api",
+    "dev:web": "npm run dev --workspace @kingdom-chess/web",
+    "build": "npm run build --workspaces --if-present",
+    "test": "npm run test --workspace @kingdom-chess/api",
+    "lint": "npm run lint --workspaces --if-present",
+    "db:up": "docker compose up -d db",
+    "db:down": "docker compose down",
+    "db:logs": "docker compose logs -f db",
+    "db:generate": "npm run db:generate --workspace @kingdom-chess/api",
+    "db:migrate": "npm run db:migrate --workspace @kingdom-chess/api"
+  }
+}
